@@ -1,15 +1,42 @@
-import React, { useState } from 'react'
-import { useHistory } from 'react-router'
+import React, { useEffect, useState } from 'react'
+import { useHistory, useLocation } from 'react-router'
 import * as BooksAPI from './BooksAPI'
+import * as queryString from 'query-string'
 
 const Search = () => {
 
 
     const history = useHistory()
+    const location = useLocation()
+
+
+
+    useEffect(() => {
+
+        const searchQuery = queryString.parse(location.search)
+        
+        async function fetchData() {
+            let response = await BooksAPI.search(searchQuery.query)
+            if (response.error === 'empty query') {
+                setSearchResult([])
+            } else {
+                setSearchResult(response)
+            }
+        }
+
+        if (searchQuery.query)
+            fetchData();
+
+        return () => {
+            setSearchResult([])
+        }
+    }, []);
 
     const [searchResult, setSearchResult] = useState([])
+
     const searchBooks = async (e) => {
-        if (e.key === 'Enter' && e.target.value !== '') {
+        if (e.key === 'Enter' && e.target.value) {
+            history.push({ pathname: "/search", search: `?query=${e.target.value}` })
             let response = await BooksAPI.search(e.target.value)
             if (response.error === 'empty query') {
                 setSearchResult([])
