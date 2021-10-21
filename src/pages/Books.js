@@ -1,44 +1,60 @@
 import React, { useEffect, useState } from 'react'
 import { useHistory } from 'react-router'
-import * as BooksAPI from './BooksAPI'
 
-const Books = () => {
+import Loader from '../components/Loader'
+import * as BooksAPI from '../api/BooksAPI'
+
+const Books = (props) => {
 
     const history = useHistory()
     const [books, setBooks] = useState([])
 
+    const [isLoading, setIsLoading] = useState(false)
+
     useEffect(() => {
 
-        async function fetchData() {
-            let response = await BooksAPI.getAll();
-
-            setBooks(response);
+        try {
+            setIsLoading(true)
+            loadBooks();
+            setIsLoading(false)
+        } catch (error) {
+            setIsLoading(false)
         }
 
-        fetchData();
+
 
         return () => {
             setBooks([])
         }
     }, []);
 
+    const loadBooks = async () => {
+        let response = await BooksAPI.getAll();
+        setBooks(response);
+    }
 
     const selectAction = async (e, item) => {
 
-        await BooksAPI.update(item, e.target.value)
-        let response = await BooksAPI.getAll();
+        try {
+            setIsLoading(true)
+            await BooksAPI.update(item, e.target.value)
+            await loadBooks();
+            setIsLoading(false)
+        } catch (error) {
+            setIsLoading(false)
+        }
 
-        setBooks(response);
 
     }
 
     const goSearch = () => {
+
         history.push({ pathname: "/search" })
     }
 
     return (
         <div>
-
+            <Loader visible={isLoading} />
             <div className="list-books">
                 <div className="list-books-title">
                     <h1>MyReads</h1>
@@ -56,7 +72,6 @@ const Books = () => {
                                                 <div className="book-shelf-changer">
                                                     <select onChange={(e) => selectAction(e, b)} value='move'>
                                                         <option value="move" disabled>Move to...</option>
-                                                        <option value="currentlyReading">Currently Reading</option>
                                                         <option value="wantToRead">Want to Read</option>
                                                         <option value="read">Read</option>
                                                         <option value="none">None</option>
@@ -85,7 +100,6 @@ const Books = () => {
                                                     <select onChange={(e) => selectAction(e, b)} value='move'>
                                                         <option value="move" disabled>Move to...</option>
                                                         <option value="currentlyReading">Currently Reading</option>
-                                                        <option value="wantToRead">Want to Read</option>
                                                         <option value="read">Read</option>
                                                         <option value="none">None</option>
                                                     </select>
@@ -114,7 +128,6 @@ const Books = () => {
                                                         <option value="move" disabled>Move to...</option>
                                                         <option value="currentlyReading">Currently Reading</option>
                                                         <option value="wantToRead">Want to Read</option>
-                                                        <option value="read">Read</option>
                                                         <option value="none">None</option>
                                                     </select>
                                                 </div>
